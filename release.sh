@@ -33,7 +33,7 @@ case "$BUMP_TYPE" in
 esac
 
 NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-TAG="${NEW_VERSION}"
+TAG="v${NEW_VERSION}"
 
 echo "Bumping version: $CURRENT -> $NEW_VERSION"
 
