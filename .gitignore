@@ -1,0 +1,27 @@
+node_modules
+dist
+
+# Logs
+*.log
+npm-debug.log*
+
+# SQLite data
+server/data/
+data/
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode
+.idea
+*.sw?
+*.suo
+
+# Build
+*.tsbuildinfo

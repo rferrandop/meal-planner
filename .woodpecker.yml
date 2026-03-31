@@ -1,0 +1,14 @@
+when:
+  event: tag
+
+steps:
+  - name: build-and-push
+    image: woodpeckerci/plugin-docker-buildx
+    privileged: true
+    settings:
+      repo: codeberg.org/rferrando/meal-planner
+      registry: codeberg.org
+      tags: "${CI_COMMIT_TAG},latest"
+      username: rferrando
+      password:
+        from_secret: codeberg_token

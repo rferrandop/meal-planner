@@ -1,0 +1,15 @@
+services:
+  meal-planner:
+    build: .
+    container_name: meal-planner
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - meal-planner-data:/data
+    environment:
+      - PORT=3001
+      - DB_DIR=/data
+
+volumes:
+  meal-planner-data:
