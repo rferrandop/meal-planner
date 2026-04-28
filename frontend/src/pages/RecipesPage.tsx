@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Search, Loader2, Globe, Clock, Trash2 } from "lucide-react";
+import { Plus, Search, Loader2, Globe, Clock, Trash2, Upload, ImageIcon } from "lucide-react";
 import { api } from "../lib/api";
 import type { Recipe, ScrapedRecipe } from "../lib/api";
 
@@ -23,6 +23,9 @@ export default function RecipesPage() {
   const [formIngredients, setFormIngredients] = useState("");
   const [formSteps, setFormSteps] = useState("");
   const [formTags, setFormTags] = useState("");
+  const [formImageUrl, setFormImageUrl] = useState("");
+  const [formSourceUrl, setFormSourceUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const loadRecipes = async () => {
     const data = await api.getRecipes();
@@ -63,6 +66,8 @@ export default function RecipesPage() {
       );
       setFormSteps(data.steps.join("\n\n"));
       setFormTags(data.tags.join(", "));
+      setFormImageUrl(data.image_url || "");
+      setFormSourceUrl(data.source_url || scrapeUrl);
       setShowScrape(false);
       setShowAdd(true);
     } catch (err: any) {
@@ -70,6 +75,12 @@ export default function RecipesPage() {
     } finally {
       setScraping(false);
     }
+  };
+
+  const handleManualFromUrl = () => {
+    setFormSourceUrl(scrapeUrl);
+    setShowScrape(false);
+    setShowAdd(true);
   };
 
   const handleSave = async () => {
@@ -97,8 +108,8 @@ export default function RecipesPage() {
           servings: formServings,
           prep_time_min: formPrepTime || null,
           cook_time_min: formCookTime || null,
-          image_url: scrapedData.image_url,
-          source_url: scrapedData.source_url,
+          image_url: formImageUrl || scrapedData.image_url,
+          source_url: formSourceUrl || scrapedData.source_url,
           tags,
           ingredients: scrapedData.ingredients,
           steps: scrapedData.steps,
@@ -109,6 +120,8 @@ export default function RecipesPage() {
           servings: formServings,
           prep_time_min: formPrepTime || null,
           cook_time_min: formCookTime || null,
+          image_url: formImageUrl || null,
+          source_url: formSourceUrl || null,
           tags,
           ingredients,
           steps,
@@ -130,6 +143,8 @@ export default function RecipesPage() {
     setFormIngredients("");
     setFormSteps("");
     setFormTags("");
+    setFormImageUrl("");
+    setFormSourceUrl("");
   };
 
   const deleteRecipe = async (id: number) => {
@@ -224,7 +239,18 @@ export default function RecipesPage() {
                 className="search-input"
                 autoFocus
               />
-              {scrapeError && <p className="error-text">{scrapeError}</p>}
+              {scrapeError && (
+                <div>
+                  <p className="error-text">{scrapeError}</p>
+                  <button
+                    className="btn-secondary full-width"
+                    style={{ marginTop: "8px" }}
+                    onClick={handleManualFromUrl}
+                  >
+                    Crear manualmente (conservar URL)
+                  </button>
+                </div>
+              )}
               <button
                 className="btn-primary full-width"
                 onClick={handleScrape}
@@ -266,6 +292,58 @@ export default function RecipesPage() {
                   value={formDesc}
                   onChange={(e) => setFormDesc(e.target.value)}
                   rows={2}
+                />
+              </div>
+              <div className="form-group">
+                <label>Foto</label>
+                {formImageUrl && (
+                  <div style={{ marginBottom: 8 }}>
+                    <img src={formImageUrl} alt="Preview" style={{ maxHeight: 120, borderRadius: 8, objectFit: "cover" }} />
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <label className="btn-secondary" style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <Upload size={14} /> {uploading ? "Subiendo..." : "Subir foto"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      disabled={uploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploading(true);
+                        try {
+                          const { url } = await api.uploadImage(file);
+                          setFormImageUrl(url);
+                        } catch (err: any) {
+                          alert(err.message || "Error al subir imagen");
+                        } finally {
+                          setUploading(false);
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+                  </label>
+                  <span style={{ color: "#888", fontSize: "0.85em" }}>o</span>
+                  <input
+                    type="url"
+                    placeholder="URL de imagen"
+                    value={formImageUrl}
+                    onChange={(e) => setFormImageUrl(e.target.value)}
+                    className="search-input"
+                    style={{ flex: 1 }}
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>URL fuente (opcional)</label>
+                <input
+                  type="url"
+                  placeholder="https://..."
+                  value={formSourceUrl}
+                  onChange={(e) => setFormSourceUrl(e.target.value)}
+                  className="search-input"
                 />
               </div>
               <div className="form-row">

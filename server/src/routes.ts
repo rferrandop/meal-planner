@@ -1,6 +1,23 @@
 import { Router, Request, Response } from "express";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 import db from "./db.js";
 import { scrapeRecipe } from "./scraper.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, "..", "data", "uploads");
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || ".jpg";
+    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+  },
+});
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 const router = Router();
 
@@ -115,6 +132,19 @@ router.post("/recipes/scrape", async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({ error: error.message || "Failed to scrape recipe" });
   }
+});
+
+// POST /api/upload - upload an image
+router.post("/upload", upload.single("image"), (req: Request, res: Response) => {
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+  res.json({ url: `/api/uploads/${req.file.filename}` });
+});
+
+// GET /api/uploads/:filename - serve uploaded images
+router.get("/uploads/:filename", (req: Request, res: Response) => {
+  const filePath = path.join(UPLOADS_DIR, req.params.filename);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: "Not found" });
+  res.sendFile(filePath);
 });
 
 // ─── Meal Plan ──────────────────────────────────────────────

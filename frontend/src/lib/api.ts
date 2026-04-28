@@ -93,6 +93,18 @@ export const api = {
   deleteRecipe: (id: number) => request<{ success: boolean }>(`/recipes/${id}`, { method: "DELETE" }),
   scrapeRecipe: (url: string) => request<ScrapedRecipe>("/recipes/scrape", { method: "POST", body: JSON.stringify({ url }) }),
 
+  // Upload
+  uploadImage: async (file: File): Promise<{ url: string }> => {
+    const formData = new FormData();
+    formData.append("image", file);
+    const res = await fetch(`${API_BASE}/upload`, { method: "POST", body: formData });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || "Upload failed");
+    }
+    return res.json();
+  },
+
   // Meal Plan
   getMealPlan: (weekStart: string) => request<MealPlan[]>(`/meal-plan?week_start=${weekStart}`),
   setMeal: (data: { date: string; meal_type: string; recipe_id?: number; custom_meal?: string; notes?: string }) =>
