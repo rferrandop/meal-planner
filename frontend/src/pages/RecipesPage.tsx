@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Search, Loader2, Globe, Clock, Trash2, Upload, ImageIcon } from "lucide-react";
+import { Plus, Search, Loader2, Globe, Clock, Trash2, Upload } from "lucide-react";
 import { api } from "../lib/api";
 import type { Recipe, ScrapedRecipe } from "../lib/api";
 
